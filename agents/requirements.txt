@@ -1,0 +1,5 @@
+# Agents package dependencies (also used by backend)
+openai>=1.12.0
+anthropic>=0.18.1
+pytrends>=4.9.2
+httpx>=0.26.0

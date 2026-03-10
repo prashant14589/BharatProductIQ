@@ -1,0 +1,1 @@
+"""BharatProductIQ Backend Application."""
