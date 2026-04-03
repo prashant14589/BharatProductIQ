@@ -2,6 +2,7 @@
 
 import os
 import sys
+from urllib.parse import quote_plus
 from typing import Any
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -26,11 +27,45 @@ class SupplierAgent(BaseAgent):
         )
         unit_cost_inr = round(unit_cost_usd * USD_TO_INR, 2)
         shipping_inr = round(shipping_usd * USD_TO_INR, 2)
+        query = quote_plus(product_name.strip() or category.strip() or "product")
+
+        # Demo "match confidence" based on category preference.
+        # In production, this comes from item-level matching / scraping.
+        category_norm = (category or "").lower()
+        platform_conf = {
+            "electronics": 0.86,
+            "accessories": 0.78,
+            "beauty": 0.82,
+            "kitchen": 0.76,
+        }
+        default_platform_conf = 0.72
+        base_conf = platform_conf.get(category_norm, default_platform_conf)
+
+        candidates = [
+            {
+                "supplier_name": f"AliExpress - {product_name}",
+                "platform": "aliexpress",
+                "supplier_url": f"https://www.aliexpress.com/wholesale?SearchText={query}",
+                "match_confidence": min(0.95, base_conf + 0.04),
+            },
+            {
+                "supplier_name": f"Alibaba - {product_name}",
+                "platform": "alibaba",
+                "supplier_url": f"https://www.alibaba.com/trade/search?SearchText={query}",
+                "match_confidence": min(0.95, base_conf - 0.02),
+            },
+            {
+                "supplier_name": f"CJ Dropshipping - {product_name}",
+                "platform": "cj",
+                "supplier_url": f"https://app.cjdropshipping.com/search?keywords={query}",
+                "match_confidence": min(0.95, base_conf - 0.06),
+            },
+        ]
+        candidates.sort(key=lambda c: float(c.get("match_confidence") or 0), reverse=True)
+
         return {
-            "supplier_links": [
-                "https://www.aliexpress.com/item/example.html",
-                "https://www.alibaba.com/product-detail/example.html",
-            ],
+            "supplier_links": [candidates[0]["supplier_url"]],
+            "supplier_candidates": candidates,
             "unit_cost_usd": unit_cost_usd,
             "unit_cost_inr": unit_cost_inr,
             "shipping_cost_inr": shipping_inr,

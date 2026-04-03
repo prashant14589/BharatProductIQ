@@ -40,12 +40,18 @@ class ScoringAgent(BaseAgent):
         )
         logistics = max(0, logistics)
 
+        supplier_match_conf = float(context.get("supplier_match_confidence") or 0.7)
+        supplier_match_score = min(100, max(0, int(round(supplier_match_conf * 100))))
+        # Blend supplier match into logistics feasibility as a practical proxy.
+        logistics = int(round(logistics * 0.85 + supplier_match_score * 0.15))
+
         breakdown = {
             "trend_signal": trend,
             "india_gap": india_gap,
             "profit_margin": margin_score,
             "visual_demo_potential": visual,
             "logistics_feasibility": logistics,
+            "supplier_match_confidence": supplier_match_score,
         }
         total = (
             trend * self.WEIGHTS["trend_signal"]

@@ -18,17 +18,31 @@ def top_opportunities(
         db.query(Product)
         .join(ProductScore)
         .filter(Product.status == "scored")
-        .order_by(ProductScore.total_score.desc())
-        .limit(limit)
+        .order_by(ProductScore.total_score.desc(), Product.updated_at.desc())
     )
-    products = q.all()
+    ranked_products = q.all()
+    products = []
+    seen_names: set[str] = set()
+    for p in ranked_products:
+        key = (p.product_name or "").strip().lower()
+        if key in seen_names:
+            continue
+        seen_names.add(key)
+        products.append(p)
+        if len(products) >= limit:
+            break
     items = []
     for p in products:
         supplier_link = None
         for ps in p.product_suppliers or []:
-            if ps.supplier and ps.supplier.supplier_url:
+            if ps.is_primary and ps.supplier and ps.supplier.supplier_url:
                 supplier_link = ps.supplier.supplier_url
                 break
+        if supplier_link is None:
+            for ps in p.product_suppliers or []:
+                if ps.supplier and ps.supplier.supplier_url:
+                    supplier_link = ps.supplier.supplier_url
+                    break
         items.append({
             "id": str(p.id),
             "product_name": p.product_name,

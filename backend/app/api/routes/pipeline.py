@@ -1,7 +1,7 @@
 """Pipeline API routes."""
 
 from uuid import UUID
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -20,7 +20,6 @@ class PipelineRunRequest(BaseModel):
 @router.post("/run")
 def trigger_pipeline(
     body: PipelineRunRequest | None = None,
-    background_tasks: BackgroundTasks | None = None,
     db: Session = Depends(get_db),
 ):
     body = body or PipelineRunRequest()

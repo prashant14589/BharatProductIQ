@@ -41,9 +41,18 @@ def list_products(
         supplier_link = None
         if p.product_suppliers:
             for ps_rel in p.product_suppliers:
-                if ps_rel.supplier and ps_rel.supplier.supplier_url:
+                if (
+                    ps_rel.is_primary
+                    and ps_rel.supplier
+                    and ps_rel.supplier.supplier_url
+                ):
                     supplier_link = ps_rel.supplier.supplier_url
                     break
+            if supplier_link is None:
+                for ps_rel in p.product_suppliers:
+                    if ps_rel.supplier and ps_rel.supplier.supplier_url:
+                        supplier_link = ps_rel.supplier.supplier_url
+                        break
         items.append(
             ProductListItem(
                 id=p.id,

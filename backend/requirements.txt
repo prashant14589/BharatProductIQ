@@ -34,4 +34,4 @@ beautifulsoup4==4.12.3
 # Utils
 python-dotenv==1.0.1
 structlog==24.1.0
-uuid6==2024.1.10
+uuid6>=2024.1.12
